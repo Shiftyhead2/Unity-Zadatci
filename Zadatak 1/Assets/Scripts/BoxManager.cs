@@ -12,7 +12,7 @@ public class BoxManager : MonoBehaviour
 
     private Rigidbody2D myRB;
     // Start is called before the first frame update
-    void Start()
+    private void OnEnable() 
     {
         myRenderer = this.GetComponent<SpriteRenderer>();
         myRB = this.GetComponent<Rigidbody2D>();
@@ -25,6 +25,10 @@ public class BoxManager : MonoBehaviour
         int color = Random.Range(0,Colors.Length);
         myRenderer.color = Colors[color];
         currentColor = Colors[color];
+    }
+
+    private void OnDisable() {
+        setColor();
     }
 
     public void PickedUp(Transform newParent){

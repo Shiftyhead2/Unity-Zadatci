@@ -12,17 +12,27 @@ public class NPC_Behaviour : MonoBehaviour
     private Transform pickedUpObject;
 
     public Transform PickUpOrigin;
+    [Header("Ground check")]
+    public Transform FloorCheck;
+    public float GroundCheckRadious;
 
     private bool hasBox = false;
 
+    [Header("Distance to pickup/drop variable")]
     public float DistanceToPickUpOrDrop;
+    [Header("Speed variable")]
     public float Speed;
     private float actualSpeed;
+
+    [Header("Jump variables")]
+    public float JumpRadius;
 
     private float DistanceFromTarget;
 
     private GameObject[] containers;
     private GameObject[] objects;
+
+    public float JumpForce;
 
 
     // Start is called before the first frame update
@@ -46,6 +56,7 @@ public class NPC_Behaviour : MonoBehaviour
             Vector3 direction = target.position - transform.position;
             Movement = direction.normalized;
             moveCharacter(Movement);
+            checkIfInRadius();
             DistanceFromTarget = (int)Vector2.Distance(target.position,transform.position);
             if(DistanceFromTarget > DistanceToPickUpOrDrop){
                 actualSpeed = Speed;
@@ -64,6 +75,7 @@ public class NPC_Behaviour : MonoBehaviour
 
         }
 
+        //Flip the AI
         if(Movement.x >= 0.01f){
             transform.localScale = new Vector3(1,2,1);
             
@@ -73,7 +85,7 @@ public class NPC_Behaviour : MonoBehaviour
         }
     }
 
-
+    //Function that finds the target for the AI to go to.
     private void findTarget()
     {
         objects = new GameObject[0];
@@ -81,7 +93,8 @@ public class NPC_Behaviour : MonoBehaviour
         {
             objects = GameObject.FindGameObjectsWithTag("Box");
             if(objects.Length > 0){
-                target = objects[0].transform;
+                int which = Random.Range(0,objects.Length);
+                target = objects[which].transform;
             }
             
         }else
@@ -96,11 +109,6 @@ public class NPC_Behaviour : MonoBehaviour
             }
             
             
-        }
-
-        if(target != null)
-        {
-        Debug.Log("Target:" + target.name);
         }
     }
 
@@ -124,5 +132,39 @@ public class NPC_Behaviour : MonoBehaviour
         pickedUpObject = null;
         target = null;
         hasBox = false;
+    }
+
+    //Function that checks if there is a box in the way. If there is the AI jumps if it can.
+    private void checkIfInRadius()
+    {
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position,JumpRadius);
+        if(colliders.Length > 0)
+        {
+            for(int i = 0; i < colliders.Length; i++)
+            {
+                if(colliders[i].CompareTag("Box"))
+                {
+                    if(colliders[i].transform != target || colliders[i].transform != pickedUpObject){
+                        if(IsGrounded())
+                        {
+                            //Debug.Log("Jumping");
+                            Vector2 force = Vector2.up * JumpForce;
+                            myRB.AddForce(force);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    //Boolean that checks if the AI is touching the ground
+    private bool IsGrounded()
+    {
+        Collider2D[] collider2Ds = Physics2D.OverlapCircleAll(FloorCheck.position,GroundCheckRadious,9);
+        if(collider2Ds.Length > 0)
+        {
+            return true;
+        }
+        return false;
     }
 }
